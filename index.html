@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Personalized ChatBox</h1>
+    <form onsubmit="event.preventDefault(); generateContent();">
+      <label for="prompt">What`s in your mind?</label>
+      <input type="text" id="prompt" name="prompt" required>
+      <button type="submit">Generate</button>
+    </form>
+    <div class="response" id="response"></div>
+  </div>
+
+  <script>
+    async function generateContent() {
+      const prompt = document.getElementById('prompt').value;
+      const responseDiv = document.getElementById('response');
+      responseDiv.innerHTML = "<p>Generating...</p>"; // Add a loading message
+
+      try {
+        const response = await fetch('http://localhost:3000/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.response) {
+          responseDiv.innerHTML = ""; // Clear previous content
+          const paragraphs = data.response.split("\n"); // Split by new lines assuming each paragraph is separated by newline
+          paragraphs.forEach(paragraph => {
+            const p = document.createElement('p');
+            p.textContent = paragraph;
+            responseDiv.appendChild(p);
+          });
+        } else {
+          responseDiv.innerHTML = '<p>No response from AI</p>';
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        responseDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
